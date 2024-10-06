@@ -1,317 +1,130 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-typedef struct{
-    char name;
-    int rows,cols;
-    int isempty;
-    /*I try to decide true or false.
-    I search online,and learn the 'boolean'.
-    Because I stil don't understand how to use 'boolean',i judge right and wrong by changing the value of a variable*/
-    double **my2DArray;
-}m, Matrix;
-Matrix matrix[26];
-double **Array2D(size_t Rows,size_t cols)
-{
-    double **p = (double **)malloc(Rows*sizeof(double *)+
-                                    +Rows*cols*sizeof(double *));
-    if(p==NULL)
-    {
-        printf("Memory allocation error");
-    }
-    for(int i=0;i<Rows;i++)
-        p[i] = (double *)(p + Rows) + i*cols;
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QTextEdit, QMessageBox, QFileDialog
+from PyQt6.QtCore import Qt
+import datetime
+
+
+class CalendarApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("calender")
+        self.resize(500, 500)
+        #用setgeometry調按鈕和輸入、輸出框的大小位置
+        #input box
+        self.date_label = QLabel("Date(2023-05-01):", self)
+        self.date_label.setGeometry(0, 0, 500, 30)
+        self.date_edit = QLineEdit(self)
+        self.date_edit.setGeometry(0, 30, 500, 30)
+
+        self.importance_label = QLabel("importance_index(1 is most important, 10 is unimportant):", self)
+        self.importance_label.setGeometry(0, 60, 500, 30)
+        self.importance_edit = QLineEdit(self)
+        self.importance_edit.setGeometry(0, 90, 500, 30)
+
+        self.event_label = QLabel("event(作業繳交):", self)
+        self.event_label.setGeometry(0, 120, 500, 30)
+        self.event_edit = QLineEdit(self)
+        self.event_edit.setGeometry(0,150, 500, 30)
+
+
+        # button
+        self.add_button = QPushButton("add", self)
+        self.add_button.setGeometry(20, 200, 80, 30)
+        self.add_button.clicked.connect(self.add_event)
+
+        self.sort_button = QPushButton("sort", self)
+        self.sort_button.setGeometry(210, 200, 80, 30)
+        self.sort_button.clicked.connect(self.sort_events)
+
+        self.load_button = QPushButton("load", self)
+        self.load_button.setGeometry(400, 200, 80, 30)
+        self.load_button.clicked.connect(self.load_file)
         
-    return p;
-}
-/* Learn from iLearnig 3.0*/
-int getnumber(FILE *file,char c)
-{
-    int i=0,value;
-    char str[20] = {},hashtag = 0;
-    while(c < '0' || c >'9' || hashtag ==1){
-        if(c == '\n' || c == '\r'){
-            hashtag=0;
-        }
-        else if(c == '#'){
-            hashtag=1;
-        }
-        c=getc(file);
-    }
-    do{
-        str[i]=c;
-        i++;
-        c = getc(file);
-    } while(c != ' ' && c != '\n' && c != '\r');
-    ungetc(c,file);
-    /*learn from https://www.cplusplus.com*/
-    value=atoi(str);
-    return value;
-}
-void print_Array(Matrix m)
-{
-    printf("\n%c %d %d",m.name,m.rows,m.cols);
-    for(int x=0;x<m.rows;x++){
-        printf("\n");
-        for(int y=0;y<m.cols;y++){
-            printf("%15.5e\t",m.my2DArray[x][y]);
-        }
-    }
-    printf("\n");
-}
-int findindex(char name)
-{
-    return name-'A';
-}
-/* learn from iLearningFinalExam_v1.3 Instruction*/ 
-Matrix add(Matrix m1,Matrix m2)
-{
-    Matrix M;
-    M.rows=m1.rows;
-    M.cols=m1.cols;
-    M.my2DArray = Array2D(M.rows,M.cols);
-    if(M.my2DArray == NULL){
-        printf("Memory allocation error.\n");
-    }
-    if(m1.rows != m2.rows || m1.cols != m2.cols){
-        printf("Matrix size imcompatible.\n");
-    }
-    else{
-        for(int x=0;x<m1.rows;x++){
-            for(int y=0;y<m1.cols;y++){
-                M.my2DArray[x][y]=m1.my2DArray[x][y]+m2.my2DArray[x][y];
-            }
-        }
-    }
-    return M;
-}
-Matrix sub(Matrix m1,Matrix m2)
-{
-    Matrix M;
-    M.rows=m1.rows;
-    M.cols=m1.cols;
-    M.my2DArray = Array2D(m1.rows,m1.cols);
-    if(M.my2DArray == NULL){
-        printf("Memory allocation error.\n");
-    }
-    if(m1.rows != m2.rows || m1.cols != m2.cols){
-        printf("Matrix size imcompatible.\n");
-    }
-    else{
-        for(int x=0;x<m1.rows;x++){
-        for(int y=0;y<m1.cols;y++){
-            M.my2DArray[x][y]=m1.my2DArray[x][y]-m2.my2DArray[x][y];
-            }
-        }
-    }
-    return M;
-}
-Matrix mul(Matrix m1,Matrix m2)
-{
-    Matrix M;
-    int sum;
-    M.rows=m1.rows;
-    M.cols=m2.cols;
-    M.my2DArray = Array2D(m1.rows,m2.cols);
-    if(M.my2DArray == NULL){
-        printf("Memory allocation error.\n");
-    }
-    if(m1.rows != m2.cols || m1.cols != m2.rows){
-        printf("Matrix size imcompatible.\n");
-    }
-    else{
-        for(int i=0;i<m1.rows;i++){
-        for(int j=0;j<m2.cols;j++){
-            sum=0;
-            for(int k=0;k<m1.cols;k++){
-                sum=sum+m1.my2DArray[i][k]*m2.my2DArray[k][j];
-                M.my2DArray[i][j]=sum;
-            }
-        }
-    }
-    M.isempty=1;
-    }
-    return M;
-}
-void read_data(char *filename)
-{
-    char c;
-    int hashtag=0,letter=0,i;
-    FILE *pfile = fopen(filename,"r");
-    /* learn from iLearningFinalExam_v1.3.pdf Instruction*/ 
-    if(pfile == NULL){
-        printf("File error.\n");
-    }
-    while( (c = getc (pfile)) != EOF){
-        if(c == '\n'||c == '\r'){
-            hashtag=0;
-        }
-        else if(c == '#'){
-            hashtag=1;
-        }
-        else if(hashtag != 1){
-            if(c <= 'Z' && c >= 'A'){
-                letter=1;
-                i=findindex(c);
-                matrix[i].name = c;
-                matrix[i].isempty=1;
-            }
-            else if(letter == 1){
-                matrix[i].rows = getnumber(pfile,c);
-                matrix[i].cols = getnumber(pfile,c);
-                matrix[i].my2DArray=Array2D(matrix[i].rows,matrix[i].cols);
-                if(matrix[i].my2DArray == NULL){
-                    printf("Memory allocation error.\n");
-                }
-                for(int x=0;x<matrix[i].rows;x++){
-                    for(int y=0;y<matrix[i].cols;y++){
-                        matrix[i].my2DArray[x][y]=getnumber(pfile,c);
-                    }
-                }
-                letter=0;
-            }    
-        }
-    }   
-}
-int main()
-{
-    char order[128]={},order1[128]={},c1,c2;
-    int i,a,b,c,f_rows,l_rows,f_cols,l_cols,cnt,m,x,y;
-    do{
-        printf("$ ");
-        scanf("%s", order);
-        /*because i use string to store the command ,there is not space in the command */
-        if(order[0] == '<' || order[0] == '>'){
-            memcpy(order1,&order[1],strlen(order)-1);
-            /* learn from http://tw.gitbook.net/c_standard_library/c_function_memcpy.html*/
-            read_data(order1);
-        }
-        else if(order[0] == '?'){
-            if(order[1] >= 'A' && order[1] <= 'Z'){
-                i=findindex(order[1]);
-                if(matrix[i].isempty != 1){
-                    printf("Matrix not exist.\n");
-                }
-                else{
-                    print_Array(matrix[i]);
-                }
-            }
-            else{
-                printf("Matrixes status:\n");
-                printf("Name\trols\tcols\n");         
-                for(i=0;i<=26;i++){
-                    if(matrix[i].isempty == 1){
-                        printf("%c\t%d\t%d\n",matrix[i].name,matrix[i].rows,matrix[i].cols);
-                    }
-                }
-            }
-        }
-        else if(order[0] == '!' && order[1] <= 'Z' && order[1] >= 'A'){
-            i=findindex(order[1]);
-            matrix[i].isempty=0;
-        }
-        else if(strcmp(order,"!!d") == 0){
-            /* learn from https://cplusplus.com/reference/cstring/strcmp/?kw=strcmp*/
-            for(int j=0;j<=26;j++){
-                matrix[j].isempty=0;
-            }
-        }
-        else if(order[0] <= 'Z' && order[0] >= 'A'){
-            if(order[3] == '+'){
-                a=findindex(order[0]);
-                b=findindex(order[2]);
-                c=findindex(order[4]);
-                if(matrix[b].isempty != 1 || matrix[c].isempty != 1){
-                    printf("matrix operation is not exist\n");
-                }
-                else{
-                    matrix[a]=add(matrix[b],matrix[c]);
-                    matrix[a].name=order[0];
-                    matrix[a].isempty=1;
-                }
-            }
-            else if(order[3] == '-'){
-                a=findindex(order[0]);
-                b=findindex(order[2]);
-                c=findindex(order[4]);
-                if(matrix[b].isempty != 1 || matrix[c].isempty != 1){
-                    printf("matrix operation is not exist\n");
-                }
-                else{
-                    matrix[a]=sub(matrix[b],matrix[c]);
-                    matrix[a].name=order[0];
-                    matrix[a].isempty=1;
-                }
-            }
-            else if(order[3] == '*'){
-                a=findindex(order[0]);
-                b=findindex(order[2]);
-                c=findindex(order[4]);
-                if(matrix[b].isempty != 1 || matrix[c].isempty != 1){
-                    printf("matrix operation is not exist\n");
-                }
-                else{
-                    matrix[a]=mul(matrix[b],matrix[c]);
-                    if(matrix[a].isempty == 1){
-                        matrix[a].name=order[0];
-                    }
-                }
-            }
-            else if(order[2] == '+'){
-                a=findindex(order[0]);
-                b=findindex(order[3]);
-                matrix[a].my2DArray=matrix[b].my2DArray;
-                matrix[a].name=order[0];
-                matrix[a].isempty=1;
-            }
-            else if(order[2] == '-'){
-                a=findindex(order[0]);
-                b=findindex(order[3]);
-                matrix[a].rows=matrix[b].rows;
-                matrix[a].cols=matrix[b].cols;
-                matrix[a].my2DArray=Array2D(matrix[a].rows,matrix[a].cols);
-                for(int k=0;k<matrix[a].rows;k++){
-                    for(int j=0;j<matrix[a].cols;j++){
-                        matrix[a].my2DArray[k][j]=-matrix[b].my2DArray[k][j];
-                    }
-                }
-                matrix[a].name=order[0];
-                matrix[a].isempty=1;
-            }
-            else if(order[3] == '['){
-                m=sscanf(order,"%c=%c[%d:%d,%d:%d]%n",&c1,&c2,&f_rows,&l_rows,&f_cols,&l_cols,&cnt);
-                /* learn from iLearningFinalExam_v1.3 Instruction*/                
-                a=findindex(c1);
-                b=findindex(c2);
-                x=0;
-                y=0;
-                if(l_rows > matrix[b].rows || l_cols >matrix[b].cols){
-                    printf("Matrix out of index.\n");
-                }
-                else{
-                    matrix[a].rows=l_rows-f_rows;
-                    matrix[a].cols=l_cols-f_cols;
-                    matrix[a].my2DArray=Array2D(matrix[a].rows,matrix[a].cols);
-                    for(int k=f_rows;k<l_rows;k++){
-                        y=0;
-                        for(int j=f_cols;j<l_cols;j++){
-                            matrix[a].my2DArray[x][y]=matrix[b].my2DArray[k][j];
-                            y++;
-                        }
-                        x++;
-                    }
-                    matrix[a].name=order[0];
-                    matrix[a].isempty=1;
-                }
-            }
-        }
-        else if(strcmp(order,"!!q") == 0){
-            for(i=0;i<26;i++){
-                free(matrix[i].my2DArray); 
-            }
-        }
-        else{
-            printf("commend error.\n");
-        }
-    }while(strcmp(order,"!!q") != 0);
-}
+
+        # message
+        self.text_edit = QTextEdit(self)
+        self.text_edit.setGeometry(20, 250, 460, 230)
+        self.text_edit.setReadOnly(True)
+
+        # data
+        self.events = []
+
+    def add_event(self):
+        date = self.date_edit.text()
+        event = self.event_edit.text()
+        importance = self.importance_edit.text()
+        #判斷輸入的內容是否符合格式、是否格子內都有內容
+        #用if、try、expect判斷，try的用法參考https://steam.oxxostudio.tw/category/python/basic/try-except.html
+        if not date or not event or not importance:
+            QMessageBox.warning(self, "false", "please input all data")
+            return
+
+        try:
+            datetime.datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            QMessageBox.warning(self, "false", "invalid date")
+            return
+
+        try:
+            importance = int(importance)
+            if importance < 1 or importance > 10:
+                raise ValueError
+        except ValueError:
+            QMessageBox.warning(self, "false", "importance_index need 1-10")
+            return
+
+
+        self.events.append((date, event, importance))
+
+        # delete input box
+        self.date_edit.clear()
+        self.event_edit.clear()
+        self.importance_edit.clear()
+        self.display_events()
+    #insertion sort from https://www.programiz.com/dsa/insertion-sort
+    def sort_events(self):
+        for i in range(1, len(self.events)):
+            key = self.events[i]
+            j = i - 1
+            while j >= 0 and self.events[j][2] > key[2]:
+                self.events[j + 1] = self.events[j]
+                j -= 1
+            self.events[j + 1] = key
+        #datetime 排序 from https://www.nhooo.com/note/qahhqb.html
+        self.events.sort(key=lambda x: datetime.datetime.strptime(x[0], "%Y-%m-%d"))
+
+        self.display_events()
+    
+    def display_events(self):
+        self.text_edit.clear()
+        self.text_edit.append("Date/importance_index/event")
+        for event in self.events:
+            self.text_edit.append(f"{event[0]} / {event[2]} / {event[1]}")
+#這部分花費了許多時間參考了許多方法和網站，其中https://stackoverflow.com/questions/59223603/qfiledialog-always-opens-behind-main-window 中的內容為主要使用方法
+    def load_file(self):
+        file_dialog = QFileDialog()
+        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+        if file_dialog.exec() == QFileDialog.DialogCode.Accepted:
+            file_path = file_dialog.selectedFiles()[0]
+            self.parse_file(file_path)
+
+    def parse_file(self, file_path):
+        try:
+            with open(file_path, "r") as file:
+                self.events.clear()
+                for line in file:
+                    date, event, importance = line.strip().split(",")
+                    self.events.append((date, event, int(importance)))
+                self.sort_events()
+        except Exception as e:
+            QMessageBox.warning(self, "error", f"無法載入文件：{str(e)}")
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.close()
+
+
+if __name__ == "__main__":
+    app = QApplication([])
+    window = CalendarApp()
+    window.show()
+    app.exec()
